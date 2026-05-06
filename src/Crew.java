@@ -16,6 +16,21 @@ public class Crew {
         role = crewRole;
     }
 
+    // Get crew status as string
+    public String getStatus() {
+        if (!alive) {
+            return "Dead";
+        } else if (malnourished) {
+            return "Malnourished";
+        } else if (isHydrated && !isFed) {
+            return "Hungry";
+        } else if (!isHydrated && isFed) {
+            return "Thirsty";
+        }
+
+        return "Well";
+    }
+
     // Update crew status when called
     public void update() {
         // Remove 5 health if not fed

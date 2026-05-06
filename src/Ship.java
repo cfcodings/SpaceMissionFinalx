@@ -33,7 +33,6 @@ public class Ship {
         }
 
         // Maintain the ship at the cost of supplies
-        // The mission class handles the maintenance functionality
         this.supplies -= 15;
         this.condition = "Maintained";
 
