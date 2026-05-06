@@ -5,6 +5,7 @@ public class Ship {
     int supplies = 100;
 
     String condition = "Maintained";
+    boolean isTravelling = false;
 
     // Maintain the ship, costing a repair kit in exchange for less travel failure risk
     public boolean maintain(Crew crewMember) {
@@ -20,15 +21,15 @@ public class Ship {
             return false;
         }
 
-        // Can't repair if you haven't had food or water 💀
-        if (crewMember.malnourished) {
-            System.out.println(crewMember.name + " is malnourished and cannot maintain the ship!");
+        // Can't repair if you're resting, you need your sleep
+        if (crewMember.isResting) {
+            System.out.println(crewMember.name + " is resting and cannot maintain the ship!");
             return false;
         }
 
         // A dead person cannot maintain a ship
         if (!crewMember.alive) {
-            System.out.println(crewMember.name + " is dead.");
+            System.out.println(crewMember.name + " is dead. They cannot maintain anything.");
             return false;
         }
 
@@ -40,37 +41,90 @@ public class Ship {
         return true;
     }
 
-    // Feed a crew member, costing supplies in exchange for enabling Fed status on a crew member
-    public boolean feed(Crew crewMember) {
-        // Fail feeding if there are no supplies to feed with
-        if (this.supplies < 5) {
-            System.out.println("The ship ran out of supplies, so " + crewMember.name + " cannot be fed.");
+    // Rest crew member, which will heal them and take resources next travel
+    public boolean rest(Crew crewMember) {
+        // Dead
+        if (!crewMember.alive) {
+            System.out.println(crewMember.name + " is permanently at rest. This won't help.");
             return false;
         }
 
-        // Remove supplies and feed the crew member, disabling Malnourished status
-        this.supplies -= 5;
-        crewMember.isFed = true;
-        crewMember.malnourished = false;
+        // Fail resting if there are no supplies to rest with
+        if (this.supplies < 5) {
+            System.out.println("The ship ran out of supplies, so " + crewMember.name + " cannot rest.");
+            return false;
+        }
+
+        // Allow member to rest, removing rationing status.
+        crewMember.isResting = true;
+        crewMember.isRationing = false;
 
         // Return that it was successful
         return true;
     }
 
-    // Feed a crew member, costing supplies in exchange for enabling Hydrated status on a crew member
-    public boolean quench(Crew crewMember) {
-        // Fail feeding if there are no supplies to feed with
-        if (this.supplies < 5) {
-            System.out.println("The ship ran out of supplies, so " + crewMember.name + " cannot be quenched.");
+    // Ration supplies, which will damage them and save resources next travel
+    public boolean ration(Crew crewMember) {
+        // Dead, so cannot ration
+        if (!crewMember.alive) {
+            System.out.println(crewMember.name + " is dead. There's nothing to save.");
             return false;
         }
 
-        // Remove supplies and hydrate the crew member, disabling Malnourished status
-        this.supplies -= 5;
-        crewMember.isHydrated = true;
-        crewMember.malnourished = false;
+        // Allow member to ration supplies, removing Rest status
+        crewMember.isResting = false;
+        crewMember.isRationing = true;
 
         // Return that it was successful
+        return true;
+    }
+
+    // Continue ship travel, adjusting status and is further used in Mission class
+    public boolean travel(Crew[] members, StringBuilder resourceHistory) {
+        // Check if members are resting or rationing
+        boolean membersHaveActions = true;
+        for (Crew member : members) {
+            if (member.alive && (!member.isRationing && !member.isResting)) {
+                membersHaveActions = false;
+                break;
+            }
+        }
+
+        // Fail to travel if members haven't been assigned an action
+        if (!membersHaveActions) {
+            System.out.println("All members have not been assigned an action!");
+            return false;
+        }
+
+        // Update all crew members for next day & lose 5 oxygen per non rationing member
+        int oxygenLoss = 0;
+        int supplyLoss = 0;
+        for (Crew member : members) {
+            if (member.alive) {
+                if (!member.isRationing) {
+                    oxygenLoss += 5;
+                }
+
+                if (member.isResting) {
+                    supplyLoss += 5;
+                }
+
+                member.update();
+            }
+        }
+
+        // Lower fuel, oxygen & supplies during travel
+        this.fuel = Math.max(this.fuel - 10, 0);
+        this.oxygen = Math.max(this.oxygen - oxygenLoss, 0);
+        this.supplies = Math.max(this.supplies - supplyLoss, 0);
+        this.isTravelling = true;
+
+        // Add information to resource log
+        resourceHistory.append("\n- 10 fuel was consumed during travelling.");
+        resourceHistory.append("\n- ").append(oxygenLoss).append(" oxygen was consumed during travelling.");
+        resourceHistory.append("\n- ").append(supplyLoss).append(" supplies were consumed during travelling.");
+
+        // Return a successful travel
         return true;
     }
 }

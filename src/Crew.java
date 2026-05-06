@@ -5,10 +5,10 @@ public class Crew {
     int health = 100;
     boolean alive = true;
 
-    boolean isFed = true;
-    boolean isHydrated = true;
+    final String[] STATUS_NAMES = {"Healthy", "Malnourished", "Starved", "Dying"};
+    int crewStatus = 0;
+    boolean isRationing = false;
     boolean isResting = false;
-    boolean malnourished = false; // Malnourished if the member has not been fed or hydrated
 
     // Constructor to set up crew member
     public Crew(String chosenName, String crewRole) {
@@ -20,51 +20,46 @@ public class Crew {
     public String getStatus() {
         if (!alive) {
             return "Dead";
-        } else if (malnourished) {
-            return "Malnourished";
-        } else if (isHydrated && !isFed) {
-            return "Hungry";
-        } else if (!isHydrated && isFed) {
-            return "Thirsty";
+        } else {
+            return STATUS_NAMES[this.crewStatus];
         }
+    }
 
-        return "Well";
+    // Get crew action as string
+    public String getAction() {
+        if (this.isRationing) {
+            return "Rationing";
+        } else if (this.isResting) {
+            return "Resting";
+        } else {
+           return "No Action";
+        }
     }
 
     // Update crew status when called
     public void update() {
-        // Remove 5 health if not fed
-        if (!isFed) {
-            if (!malnourished) {
-                System.out.println(this.name + " is hungry! -5 HP");
-            }
-
-            health -= 5;
+        // Don't update if the crew member is dead
+        if (!this.alive) {
+            return;
         }
 
-        // Remove 10 health if not hydrated since water is very important
-        if (!isHydrated) {
-            if (!malnourished) {
-                System.out.println(this.name + " is thirsty! -10 HP");
-            }
-
-            health -= 10;
+        if (isResting) {
+            // Heal crewmate and restore status by 1
+            this.health += 5;
+            this.crewStatus = Math.max(this.crewStatus - 1, 0);
+        } else if (isRationing) {
+            // Lower status by 1
+            this.crewStatus = Math.min(this.crewStatus + 1, STATUS_NAMES.length - 1);
         }
 
-        // One announcement if not fed and hungry
-        if (malnourished) {
-            System.out.println(this.name + " is MALNOURISHED! -15 HP");
-        }
+        // Remove health on update based on current status
+        int healthLoss = (this.crewStatus * 5);
+        this.health -= healthLoss;
 
         // Die if you lose all HP
-        if (health <= 0) {
-            alive = false;
-            health = 0;
+        if (this.health <= 0) {
+            this.alive = false;
+            this.health = 0;
         }
-
-        // Reset food and health status
-        isFed = false;
-        isHydrated = false;
-        malnourished = true;
     }
 }
