@@ -29,6 +29,24 @@ public class Mission {
         System.out.println("Your crew is at peak health, can you keep it that way?");
     }
 
+    // Score that is calculated after a simulation ends
+    public static int calculateScore() {
+        int score = 0;
+
+        for (Crew member : crewMembers) {
+            if (member.alive) {
+                score += 100;
+            }
+        }
+
+        score += (flyingShip.fuel * 5);
+        score += (flyingShip.supplies * 2);
+        score += (flyingShip.oxygen * 3);
+        score += Math.max(300 - (missionDay * 15), 0);
+
+        return score;
+    }
+
     public static void displayShip() {
         // Use ship info for multiple status strings
         System.out.println("\nShip Status: ");
@@ -102,6 +120,7 @@ public class Mission {
                     System.out.println("You won! You made it to mars!");
                     System.out.println("Crew Members left: " + crewAlive);
                     System.out.println("Days taken: " + missionDay);
+                    System.out.println("Score: " + calculateScore());
 
                     running = false;
                     break;
@@ -124,6 +143,7 @@ public class Mission {
                         System.out.println("Fuel left: " + flyingShip.fuel);
                         System.out.println("Oxygen left: " + flyingShip.oxygen);
                         System.out.println("Did everyone die? " + isEveryoneDead);
+                        System.out.println("Score: " + calculateScore());
 
                         running = false;
                         break;
